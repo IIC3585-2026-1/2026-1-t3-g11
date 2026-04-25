@@ -1,11 +1,19 @@
 import { useImmerReducer } from "use-immer";
 import Package from "./Package";
-import { calculateKnapsack } from "./knapsack";
 import { useState } from "react";
+import createKnacksackModule from "./wasm/knacksack.js";
+
+type State = { maxWeight: number; packages: Package[] };
+type Action =
+  | { type: "increase_package_count" }
+  | { type: "decrease_package_count" }
+  | { type: "change_max_weight"; maxWeight: number }
+  | { type: "change_package_weight"; index: number; weight: number }
+  | { type: "change_package_value"; index: number; value: number };
 
 function reducer(
-  draft: { maxWeight: Number; packages: Array<Package> },
-  action: any,
+  draft: State,
+  action: Action,
 ) {
   switch (action.type) {
     case "increase_package_count":
@@ -34,18 +42,41 @@ function reducer(
 }
 
 export default function App() {
-  const [solution, setSolution] = useState(null);
+  const [solution, setSolution] = useState<number | null>(null);
   const [{ maxWeight, packages }, dispatch] = useImmerReducer(reducer, {
     maxWeight: 0,
     packages: [new Package()],
   });
   const packageCount = packages.length;
 
-  const handleCalculate = () => {
+  const toIntVector = (
+    module: Awaited<ReturnType<typeof createKnacksackModule>>,
+    values: number[],
+  ) => {
+    const vector = new module.IntVector();
+    values.forEach((value) => vector.push_back(value));
+    return vector;
+  };
+
+  const handleCalculate = async () => {
     // TODO verificar que todos los datos sean números
-    const solution = calculateKnapsack(maxWeight, packages);
-    console.log(solution);
-    // TODO mostrar solución
+    const module = await createKnacksackModule();
+    const values = packages.map((pkg) => pkg.value);
+    const weights = packages.map((pkg) => pkg.weight);
+    const valueVector = toIntVector(module, values);
+    const weightVector = toIntVector(module, weights);
+
+    let result: number;
+    try {
+      result = module.knapsack(maxWeight, valueVector, weightVector);
+    } finally {
+      valueVector.delete();
+      weightVector.delete();
+    }
+
+    console.log(result);
+
+    setSolution(result);
   };
 
   return (
@@ -127,7 +158,7 @@ export default function App() {
       <section>
         <h2>Solución</h2>
         <button onClick={handleCalculate}>Calcular</button>
-        {solution !== null ? "TODO" : "TODO"}
+        {solution !== null ? <p>{solution}</p> : <p>Sin calcular</p>}
       </section>
     </article>
   );
