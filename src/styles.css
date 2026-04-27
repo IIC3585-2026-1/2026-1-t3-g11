@@ -162,3 +162,50 @@ ol {
     flex-wrap: wrap;
   }
 }
+
+@media (max-width: 640px) {
+  /* 1. Menos espacio exterior para ganar pantalla */
+  #root {
+    padding: 1rem 0.5rem;
+  }
+
+  article {
+    padding: 1.25rem;
+    border-radius: 12px; /* Un poco menos redondeado para aprovechar bordes */
+  }
+
+  /* 2. Inputs más cómodos y sin auto-zoom en iOS */
+  input[type="number"] {
+    width: 100%; /* Que ocupe el ancho disponible en la fila */
+    min-height: 44px; /* Altura recomendada por Apple/Google para touch */
+    font-size: 1rem;
+    padding: 0.6rem;
+  }
+
+  /* 3. Botones más fáciles de presionar */
+  button {
+    min-height: 44px;
+    padding: 0.6rem 1rem;
+    width: 100%; /* En móviles, botones de ancho completo suelen convertir mejor */
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  /* 4. Ajuste de filas */
+  .controls-row {
+    flex-direction: column; /* Apilamos los controles para que no se amontonen */
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  label {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+
+  .badge {
+    margin-left: 0;
+    align-self: flex-start;
+  }
+}
